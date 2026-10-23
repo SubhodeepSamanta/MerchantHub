@@ -26,6 +26,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.merchanthub.entity.LedgerEntry;
+import com.merchanthub.repository.LedgerEntryRepository;
+
 @Service
 public class PaymentService {
 
@@ -33,17 +36,20 @@ public class PaymentService {
   private final MerchantRepository merchantRepository;
   private final WalletService walletService;
   private final CashAdvanceRepository cashAdvanceRepository;
+  private final LedgerEntryRepository ledgerEntryRepository;
 
   public PaymentService(
       PaymentRepository paymentRepository,
       MerchantRepository merchantRepository,
       WalletService walletService,
-      CashAdvanceRepository cashAdvanceRepository
+      CashAdvanceRepository cashAdvanceRepository,
+      LedgerEntryRepository ledgerEntryRepository
   ) {
     this.paymentRepository = paymentRepository;
     this.merchantRepository = merchantRepository;
     this.walletService = walletService;
     this.cashAdvanceRepository = cashAdvanceRepository;
+    this.ledgerEntryRepository = ledgerEntryRepository;
   }
 
   @Transactional
@@ -143,6 +149,29 @@ public class PaymentService {
 
     if (payment.getStatus() != PaymentStatus.SUCCESS) {
       throw new BusinessRuleException("Only successful payments can be refunded");
+    }
+
+    Optional<LedgerEntry> repaymentEntryOpt = ledgerEntryRepository
+        .findFirstByReferenceIdAndReason(payment.getId(), LedgerReason.ADVANCE_REPAYMENT);
+
+    if (repaymentEntryOpt.isPresent()) {
+      BigDecimal repayment = repaymentEntryOpt.get().getAmount();
+
+      Optional<CashAdvance> advanceOpt = cashAdvanceRepository
+          .findByMerchantIdAndStatus(merchantId, AdvanceStatus.ACTIVE)
+          .or(() -> cashAdvanceRepository.findByMerchantIdOrderByCreatedAtDescIdDesc(merchantId).stream().findFirst());
+
+      if (advanceOpt.isPresent()) {
+        CashAdvance advance = advanceOpt.get();
+        BigDecimal newRepaid = advance.getAmountRepaid().subtract(repayment).max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
+        advance.setAmountRepaid(newRepaid);
+        if (newRepaid.compareTo(advance.getTotalRepayable()) < 0) {
+          advance.setStatus(AdvanceStatus.ACTIVE);
+        }
+        cashAdvanceRepository.save(advance);
+      }
+
+      walletService.credit(merchantId, repayment, LedgerReason.ADVANCE_REPAYMENT, payment.getId());
     }
 
     walletService.debit(merchantId, payment.getAmount(), LedgerReason.REFUND, payment.getId());

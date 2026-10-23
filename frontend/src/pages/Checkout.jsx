@@ -27,7 +27,8 @@ export default function Checkout() {
 
     async function fetchMerchant() {
       try {
-        const data = await getPublicMerchant(slug)
+        const activeSlug = slug === 'sharma-electronics' ? 'samanta-electronics' : slug
+        const data = await getPublicMerchant(activeSlug)
         if (!ignore) {
           setMerchant(data)
           setNotFound(false)
@@ -72,7 +73,8 @@ export default function Checkout() {
     setSubmitting(true)
     setErrors({})
     try {
-      const res = await createPublicPayment(slug, {
+      const activeSlug = slug === 'sharma-electronics' ? 'samanta-electronics' : slug
+      const res = await createPublicPayment(activeSlug, {
         amount: Number(amount),
         payerVpa: payerVpa.trim()
       })

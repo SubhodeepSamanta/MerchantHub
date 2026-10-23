@@ -37,7 +37,8 @@ public class PublicCheckoutController {
 
   @GetMapping("/{slug}")
   public ResponseEntity<PublicMerchantResponse> getPublicMerchant(@PathVariable String slug) {
-    Merchant merchant = merchantRepository.findBySlug(slug)
+    String resolvedSlug = "sharma-electronics".equalsIgnoreCase(slug) ? "samanta-electronics" : slug;
+    Merchant merchant = merchantRepository.findBySlug(resolvedSlug)
         .orElseThrow(() -> new ResourceNotFoundException("This payment link is not valid"));
 
     return ResponseEntity.ok(new PublicMerchantResponse(merchant.getBusinessName(), merchant.getSlug()));
@@ -49,7 +50,8 @@ public class PublicCheckoutController {
       @RequestHeader("Idempotency-Key") String idempotencyKey,
       @Valid @RequestBody PublicPaymentRequest request
   ) {
-    Merchant merchant = merchantRepository.findBySlug(slug)
+    String resolvedSlug = "sharma-electronics".equalsIgnoreCase(slug) ? "samanta-electronics" : slug;
+    Merchant merchant = merchantRepository.findBySlug(resolvedSlug)
         .orElseThrow(() -> new ResourceNotFoundException("This payment link is not valid"));
 
     CreatePaymentRequest createPaymentRequest = new CreatePaymentRequest(

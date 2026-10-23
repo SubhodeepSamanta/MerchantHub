@@ -47,6 +47,12 @@ public class DemoDataSeeder implements CommandLineRunner {
   @Override
   @Transactional
   public void run(String... args) {
+    merchantRepository.findBySlug("sharma-electronics").ifPresent(m -> {
+      m.setBusinessName("Samanta Electronics");
+      m.setSlug("samanta-electronics");
+      merchantRepository.save(m);
+    });
+
     Optional<Merchant> existingOpt = merchantRepository.findByEmail("demo@merchanthub.in");
     if (existingOpt.isPresent()) {
       Merchant existing = existingOpt.get();

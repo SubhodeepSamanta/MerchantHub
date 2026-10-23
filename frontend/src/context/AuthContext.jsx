@@ -10,7 +10,12 @@ export function AuthProvider({ children }) {
     const saved = localStorage.getItem('mh_merchant')
     if (!saved) return null
     try {
-      return JSON.parse(saved)
+      const parsed = JSON.parse(saved)
+      if (parsed) {
+        if (parsed.slug === 'sharma-electronics') parsed.slug = 'samanta-electronics'
+        if (parsed.businessName === 'Sharma Electronics') parsed.businessName = 'Samanta Electronics'
+      }
+      return parsed
     } catch {
       return null
     }

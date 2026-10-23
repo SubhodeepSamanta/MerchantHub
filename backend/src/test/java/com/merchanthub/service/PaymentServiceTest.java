@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.merchanthub.dto.CreatePaymentRequest;
+import com.merchanthub.dto.PaymentResponse;
 import com.merchanthub.dto.PaymentResult;
 import com.merchanthub.entity.AdvanceStatus;
 import com.merchanthub.entity.CashAdvance;
@@ -31,6 +32,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.merchanthub.repository.LedgerEntryRepository;
+
 @ExtendWith(MockitoExtension.class)
 public class PaymentServiceTest {
 
@@ -46,6 +49,9 @@ public class PaymentServiceTest {
   @Mock
   private CashAdvanceRepository cashAdvanceRepository;
 
+  @Mock
+  private LedgerEntryRepository ledgerEntryRepository;
+
   private PaymentService paymentService;
 
   @BeforeEach
@@ -54,7 +60,8 @@ public class PaymentServiceTest {
         paymentRepository,
         merchantRepository,
         walletService,
-        cashAdvanceRepository
+        cashAdvanceRepository,
+        ledgerEntryRepository
     );
   }
 
@@ -169,5 +176,51 @@ public class PaymentServiceTest {
     assertEquals(new BigDecimal("2100.00"), activeAdvance.getAmountRepaid());
     assertEquals(AdvanceStatus.ACTIVE, activeAdvance.getStatus());
     verify(cashAdvanceRepository).save(activeAdvance);
+  }
+
+  @Test
+  void refundWithRepaymentReversesAdvanceAndCreditsWallet() {
+    Long merchantId = 1L;
+    Long paymentId = 100L;
+
+    Payment payment = new Payment();
+    payment.setId(paymentId);
+    payment.setStatus(PaymentStatus.SUCCESS);
+    payment.setAmount(new BigDecimal("1000.00"));
+
+    when(paymentRepository.findByIdAndMerchantId(paymentId, merchantId))
+        .thenReturn(Optional.of(payment));
+    when(paymentRepository.save(any(Payment.class)))
+        .thenAnswer(inv -> inv.getArgument(0));
+
+    com.merchanthub.entity.LedgerEntry repaymentEntry = new com.merchanthub.entity.LedgerEntry();
+    repaymentEntry.setAmount(new BigDecimal("100.00"));
+    repaymentEntry.setReason(LedgerReason.ADVANCE_REPAYMENT);
+    repaymentEntry.setReferenceId(paymentId);
+
+    when(ledgerEntryRepository.findFirstByReferenceIdAndReason(paymentId, LedgerReason.ADVANCE_REPAYMENT))
+        .thenReturn(Optional.of(repaymentEntry));
+
+    CashAdvance activeAdvance = new CashAdvance();
+    activeAdvance.setId(5L);
+    activeAdvance.setPrincipal(new BigDecimal("10000.00"));
+    activeAdvance.setTotalRepayable(new BigDecimal("10500.00"));
+    activeAdvance.setAmountRepaid(new BigDecimal("2100.00"));
+    activeAdvance.setStatus(AdvanceStatus.ACTIVE);
+
+    when(cashAdvanceRepository.findByMerchantIdAndStatus(merchantId, AdvanceStatus.ACTIVE))
+        .thenReturn(Optional.of(activeAdvance));
+
+    PaymentResponse response = paymentService.refundPayment(merchantId, paymentId);
+
+    assertEquals(PaymentStatus.REFUNDED, response.status());
+    // Advance amountRepaid must decrease from 2100 to 2000 (outstanding goes up by 100)
+    assertEquals(new BigDecimal("2000.00"), activeAdvance.getAmountRepaid());
+    assertEquals(new BigDecimal("8500.00"), activeAdvance.getOutstanding());
+    verify(cashAdvanceRepository).save(activeAdvance);
+    // Deducted repayment credited back to wallet
+    verify(walletService).credit(merchantId, new BigDecimal("100.00"), LedgerReason.ADVANCE_REPAYMENT, paymentId);
+    // Refund debited from wallet
+    verify(walletService).debit(merchantId, new BigDecimal("1000.00"), LedgerReason.REFUND, paymentId);
   }
 }

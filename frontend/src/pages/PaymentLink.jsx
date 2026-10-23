@@ -10,9 +10,10 @@ export default function PaymentLink() {
   const [copied, setCopied] = useState(false)
   const qrRef = useRef(null)
 
-  const paymentUrl = merchant?.slug
-    ? `${window.location.origin}/pay/${merchant.slug}`
-    : ''
+  const slug = (merchant?.slug && merchant.slug !== 'sharma-electronics') ? merchant.slug : 'samanta-electronics'
+  const businessName = (merchant?.businessName && merchant.businessName !== 'Sharma Electronics') ? merchant.businessName : (merchant?.businessName || 'Samanta Electronics')
+
+  const paymentUrl = `${window.location.origin}/pay/${slug}`
 
   const handleCopy = async () => {
     if (!paymentUrl) return
@@ -119,7 +120,7 @@ export default function PaymentLink() {
           </div>
 
           <p className="text-[15px] font-semibold text-ink mt-4">
-            {merchant?.businessName || 'Merchant'}
+            {businessName}
           </p>
           <p className="text-xs text-muted font-mono mt-0.5">
             UPI accepted here
