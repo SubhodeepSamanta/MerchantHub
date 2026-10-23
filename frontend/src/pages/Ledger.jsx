@@ -7,6 +7,7 @@ import PageHeader from '../components/ui/PageHeader'
 import DataTable from '../components/ui/DataTable'
 import Pagination from '../components/ui/Pagination'
 import Button from '../components/ui/Button'
+import EmptyState from '../components/ui/EmptyState'
 
 function formatLedgerDescription(reason, referenceId) {
   switch (reason) {
@@ -168,6 +169,8 @@ export default function Ledger() {
             Try again
           </Button>
         </div>
+      ) : entries.length === 0 ? (
+        <EmptyState message="No transactions recorded in the ledger yet." />
       ) : (
         <div>
           <DataTable

@@ -15,6 +15,7 @@ import Input from '../components/ui/Input'
 import StatusBadge from '../components/ui/StatusBadge'
 import SidePanel from '../components/ui/SidePanel'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
+import EmptyState from '../components/ui/EmptyState'
 
 const STATUS_TABS = [
   { id: 'ALL', label: 'All' },
@@ -247,13 +248,23 @@ export default function Payments() {
             Try again
           </Button>
         </div>
+      ) : payments.length === 0 ? (
+        <EmptyState
+          message={
+            statusFilter === 'ALL'
+              ? 'No payments collected yet.'
+              : `No ${statusFilter.toLowerCase()} payments found.`
+          }
+          actionText={statusFilter === 'ALL' ? 'Collect payment' : undefined}
+          onAction={statusFilter === 'ALL' ? handleOpenCollect : undefined}
+        />
       ) : (
         <div>
           <DataTable
             columns={columns}
             data={payments}
             onRowClick={(row) => setSelectedPayment(row)}
-            emptyMessage="No payments found for this filter."
+            emptyMessage="No payments found."
           />
           <Pagination
             page={page}

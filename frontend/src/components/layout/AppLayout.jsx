@@ -1,10 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet } from 'react-router'
 import { Menu, X } from 'lucide-react'
 import Sidebar from './Sidebar'
 
 export default function AppLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape' && mobileMenuOpen) {
+        setMobileMenuOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [mobileMenuOpen])
 
   return (
     <div className="min-h-screen bg-canvas flex flex-col md:flex-row">
@@ -28,7 +40,7 @@ export default function AppLayout() {
       </header>
 
       {mobileMenuOpen ? (
-        <div className="md:hidden fixed inset-0 top-14 z-20 bg-surface/95 border-b border-line">
+        <div className="md:hidden fixed inset-0 top-14 z-20 bg-surface border-b border-line">
           <Sidebar onItemClick={() => setMobileMenuOpen(false)} />
         </div>
       ) : null}

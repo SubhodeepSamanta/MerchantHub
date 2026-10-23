@@ -14,6 +14,7 @@ import Button from '../components/ui/Button'
 import Input from '../components/ui/Input'
 import StatusBadge from '../components/ui/StatusBadge'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
+import EmptyState from '../components/ui/EmptyState'
 
 export default function Advances() {
   const [advances, setAdvances] = useState([])
@@ -349,11 +350,15 @@ export default function Advances() {
 
       <div>
         <h2 className="text-sm font-semibold text-ink mb-3">Advance history</h2>
-        <DataTable
-          columns={columns}
-          data={advances}
-          emptyMessage="No cash advances found."
-        />
+        {advances.length === 0 ? (
+          <EmptyState message="No cash advances found in history." />
+        ) : (
+          <DataTable
+            columns={columns}
+            data={advances}
+            emptyMessage="No cash advances found."
+          />
+        )}
       </div>
 
       <ConfirmDialog

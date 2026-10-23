@@ -16,6 +16,7 @@ import StatStrip from '../components/ui/StatStrip'
 import DataTable from '../components/ui/DataTable'
 import StatusBadge from '../components/ui/StatusBadge'
 import Button from '../components/ui/Button'
+import EmptyState from '../components/ui/EmptyState'
 
 const MONTH_NAMES = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -294,11 +295,15 @@ export default function Overview() {
           </Link>
         </div>
 
-        <DataTable
-          columns={paymentColumns}
-          data={recentPayments}
-          emptyMessage="No recent payments found."
-        />
+        {recentPayments.length === 0 ? (
+          <EmptyState message="No payments received yet." />
+        ) : (
+          <DataTable
+            columns={paymentColumns}
+            data={recentPayments}
+            emptyMessage="No recent payments found."
+          />
+        )}
       </div>
     </div>
   )
