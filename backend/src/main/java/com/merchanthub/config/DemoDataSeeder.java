@@ -12,6 +12,7 @@ import com.merchanthub.service.WalletService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -46,16 +47,23 @@ public class DemoDataSeeder implements CommandLineRunner {
   @Override
   @Transactional
   public void run(String... args) {
-    if (merchantRepository.existsByEmail("demo@merchanthub.in")) {
+    Optional<Merchant> existingOpt = merchantRepository.findByEmail("demo@merchanthub.in");
+    if (existingOpt.isPresent()) {
+      Merchant existing = existingOpt.get();
+      if (!"Samanta Electronics".equals(existing.getBusinessName()) || !"samanta-electronics".equals(existing.getSlug())) {
+        existing.setBusinessName("Samanta Electronics");
+        existing.setSlug("samanta-electronics");
+        merchantRepository.save(existing);
+      }
       return;
     }
 
     Merchant merchant = new Merchant();
-    merchant.setBusinessName("Sharma Electronics");
+    merchant.setBusinessName("Samanta Electronics");
     merchant.setEmail("demo@merchanthub.in");
     merchant.setPassword(passwordEncoder.encode("Demo@123"));
     merchant.setPhone("9876543210");
-    merchant.setSlug("sharma-electronics");
+    merchant.setSlug("samanta-electronics");
     merchant.setCreatedAt(LocalDateTime.now().minusDays(30));
     Merchant savedMerchant = merchantRepository.save(merchant);
 
@@ -76,7 +84,7 @@ public class DemoDataSeeder implements CommandLineRunner {
         "vikram.singh@okaxis",
         "ananya.r@ybl",
         "sunil.kumar@paytm",
-        "pooja.sharma@okaxis"
+        "pooja.samanta@okaxis"
     };
 
     String[] notes = {

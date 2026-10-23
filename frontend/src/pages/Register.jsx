@@ -112,7 +112,7 @@ export default function Register() {
               name="businessName"
               value={formData.businessName}
               onChange={handleChange}
-              placeholder="Sharma Electronics"
+              placeholder="Samanta Electronics"
               required
               error={errors.businessName}
             />

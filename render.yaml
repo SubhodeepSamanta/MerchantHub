@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: merchanthub-deep
+    runtime: docker
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SPRING_PROFILES_ACTIVE
+        value: demo
+      - key: SHOW_SQL
+        value: "false"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_HOST
+        fromDatabase:
+          name: merchanthub-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: merchanthub-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: merchanthub-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: merchanthub-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: merchanthub-db
+          property: password
+
+databases:
+  - name: merchanthub-db
+    plan: free
+    databaseName: merchanthub
+    user: merchanthub

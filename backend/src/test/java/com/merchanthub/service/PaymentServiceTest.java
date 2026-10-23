@@ -11,7 +11,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.merchanthub.dto.CreatePaymentRequest;
-import com.merchanthub.dto.PaymentResponse;
 import com.merchanthub.dto.PaymentResult;
 import com.merchanthub.entity.AdvanceStatus;
 import com.merchanthub.entity.CashAdvance;
@@ -24,7 +23,6 @@ import com.merchanthub.repository.CashAdvanceRepository;
 import com.merchanthub.repository.MerchantRepository;
 import com.merchanthub.repository.PaymentRepository;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;

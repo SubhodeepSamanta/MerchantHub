@@ -17,9 +17,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
 
 app:
   jwt:
