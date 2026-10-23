@@ -10,8 +10,15 @@ export default function PaymentLink() {
   const [copied, setCopied] = useState(false)
   const qrRef = useRef(null)
 
-  const slug = (merchant?.slug && merchant.slug !== 'sharma-electronics') ? merchant.slug : 'samanta-electronics'
-  const businessName = (merchant?.businessName && merchant.businessName !== 'Sharma Electronics') ? merchant.businessName : (merchant?.businessName || 'Samanta Electronics')
+  let slug = merchant?.slug || 'samanta-electronics'
+  if (slug === 'sharma-electronics' || slug.toLowerCase().includes('sharma')) {
+    slug = 'samanta-electronics'
+  }
+
+  let businessName = merchant?.businessName || 'Samanta Electronics'
+  if (businessName === 'Sharma Electronics' || businessName.toLowerCase().includes('sharma')) {
+    businessName = 'Samanta Electronics'
+  }
 
   const paymentUrl = `${window.location.origin}/pay/${slug}`
 

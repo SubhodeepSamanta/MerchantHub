@@ -13,12 +13,21 @@ public record MerchantResponse(
 ) {
 
   public static MerchantResponse from(Merchant merchant) {
+    String businessName = merchant.getBusinessName();
+    String slug = merchant.getSlug();
+    if ("demo@merchanthub.in".equalsIgnoreCase(merchant.getEmail())
+        || "sharma-electronics".equalsIgnoreCase(slug)
+        || (slug != null && slug.toLowerCase().contains("sharma"))
+        || (businessName != null && businessName.toLowerCase().contains("sharma"))) {
+      businessName = "Samanta Electronics";
+      slug = "samanta-electronics";
+    }
     return new MerchantResponse(
         merchant.getId(),
-        merchant.getBusinessName(),
+        businessName,
         merchant.getEmail(),
         merchant.getPhone(),
-        merchant.getSlug(),
+        slug,
         merchant.getCreatedAt()
     );
   }

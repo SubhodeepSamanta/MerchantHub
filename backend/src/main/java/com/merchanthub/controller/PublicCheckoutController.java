@@ -37,11 +37,15 @@ public class PublicCheckoutController {
 
   @GetMapping("/{slug}")
   public ResponseEntity<PublicMerchantResponse> getPublicMerchant(@PathVariable String slug) {
-    String resolvedSlug = "sharma-electronics".equalsIgnoreCase(slug) ? "samanta-electronics" : slug;
-    Merchant merchant = merchantRepository.findBySlug(resolvedSlug)
-        .orElseThrow(() -> new ResourceNotFoundException("This payment link is not valid"));
+    Merchant merchant = resolveMerchant(slug);
+    String businessName = merchant.getBusinessName();
+    if (businessName != null && businessName.toLowerCase().contains("sharma")) {
+      businessName = "Samanta Electronics";
+    }
+    String merchantSlug = "samanta-electronics".equalsIgnoreCase(merchant.getSlug()) || (merchant.getSlug() != null && merchant.getSlug().toLowerCase().contains("sharma"))
+        ? "samanta-electronics" : merchant.getSlug();
 
-    return ResponseEntity.ok(new PublicMerchantResponse(merchant.getBusinessName(), merchant.getSlug()));
+    return ResponseEntity.ok(new PublicMerchantResponse(businessName, merchantSlug));
   }
 
   @PostMapping("/{slug}/pay")
@@ -50,9 +54,7 @@ public class PublicCheckoutController {
       @RequestHeader("Idempotency-Key") String idempotencyKey,
       @Valid @RequestBody PublicPaymentRequest request
   ) {
-    String resolvedSlug = "sharma-electronics".equalsIgnoreCase(slug) ? "samanta-electronics" : slug;
-    Merchant merchant = merchantRepository.findBySlug(resolvedSlug)
-        .orElseThrow(() -> new ResourceNotFoundException("This payment link is not valid"));
+    Merchant merchant = resolveMerchant(slug);
 
     CreatePaymentRequest createPaymentRequest = new CreatePaymentRequest(
         request.payerVpa(),
@@ -74,5 +76,17 @@ public class PublicCheckoutController {
     );
 
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
+  }
+
+  private Merchant resolveMerchant(String slug) {
+    String resolvedSlug = (slug != null && slug.toLowerCase().contains("sharma")) ? "samanta-electronics" : slug;
+    return merchantRepository.findBySlug(resolvedSlug)
+        .or(() -> {
+          if ("samanta-electronics".equalsIgnoreCase(resolvedSlug)) {
+            return merchantRepository.findByEmail("demo@merchanthub.in");
+          }
+          return java.util.Optional.empty();
+        })
+        .orElseThrow(() -> new ResourceNotFoundException("This payment link is not valid"));
   }
 }

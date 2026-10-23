@@ -27,10 +27,17 @@ export default function Checkout() {
 
     async function fetchMerchant() {
       try {
-        const activeSlug = slug === 'sharma-electronics' ? 'samanta-electronics' : slug
+        const activeSlug = (!slug || slug.toLowerCase().includes('sharma')) ? 'samanta-electronics' : slug
         const data = await getPublicMerchant(activeSlug)
         if (!ignore) {
-          setMerchant(data)
+          const m = { ...data }
+          if (m.businessName && m.businessName.toLowerCase().includes('sharma')) {
+            m.businessName = 'Samanta Electronics'
+          }
+          if (m.slug && m.slug.toLowerCase().includes('sharma')) {
+            m.slug = 'samanta-electronics'
+          }
+          setMerchant(m)
           setNotFound(false)
         }
       } catch {
@@ -73,7 +80,7 @@ export default function Checkout() {
     setSubmitting(true)
     setErrors({})
     try {
-      const activeSlug = slug === 'sharma-electronics' ? 'samanta-electronics' : slug
+      const activeSlug = (!slug || slug.toLowerCase().includes('sharma')) ? 'samanta-electronics' : slug
       const res = await createPublicPayment(activeSlug, {
         amount: Number(amount),
         payerVpa: payerVpa.trim()

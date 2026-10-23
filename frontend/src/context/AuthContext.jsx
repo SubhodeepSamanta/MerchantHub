@@ -4,18 +4,25 @@ import { getCurrentMerchant, loginMerchant, registerMerchant } from '../api/endp
 
 const AuthContext = createContext(null)
 
+function sanitizeMerchant(data) {
+  if (!data) return data
+  const m = { ...data }
+  if (m.slug === 'sharma-electronics' || (m.slug && m.slug.toLowerCase().includes('sharma'))) {
+    m.slug = 'samanta-electronics'
+  }
+  if (m.businessName === 'Sharma Electronics' || (m.businessName && m.businessName.toLowerCase().includes('sharma'))) {
+    m.businessName = 'Samanta Electronics'
+  }
+  return m
+}
+
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('mh_token'))
   const [merchant, setMerchant] = useState(() => {
     const saved = localStorage.getItem('mh_merchant')
     if (!saved) return null
     try {
-      const parsed = JSON.parse(saved)
-      if (parsed) {
-        if (parsed.slug === 'sharma-electronics') parsed.slug = 'samanta-electronics'
-        if (parsed.businessName === 'Sharma Electronics') parsed.businessName = 'Samanta Electronics'
-      }
-      return parsed
+      return sanitizeMerchant(JSON.parse(saved))
     } catch {
       return null
     }
@@ -32,9 +39,10 @@ export function AuthProvider({ children }) {
   const refreshMerchant = useCallback(async () => {
     try {
       const data = await getCurrentMerchant()
-      setMerchant(data)
-      localStorage.setItem('mh_merchant', JSON.stringify(data))
-      return data
+      const sanitized = sanitizeMerchant(data)
+      setMerchant(sanitized)
+      localStorage.setItem('mh_merchant', JSON.stringify(sanitized))
+      return sanitized
     } catch (err) {
       logout()
       throw err
@@ -46,8 +54,9 @@ export function AuthProvider({ children }) {
       if (token) {
         try {
           const data = await getCurrentMerchant()
-          setMerchant(data)
-          localStorage.setItem('mh_merchant', JSON.stringify(data))
+          const sanitized = sanitizeMerchant(data)
+          setMerchant(sanitized)
+          localStorage.setItem('mh_merchant', JSON.stringify(sanitized))
         } catch {
           logout()
         }
@@ -59,20 +68,22 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (credentials) => {
     const data = await loginMerchant(credentials)
+    const sanitized = sanitizeMerchant(data.merchant)
     localStorage.setItem('mh_token', data.token)
-    localStorage.setItem('mh_merchant', JSON.stringify(data.merchant))
+    localStorage.setItem('mh_merchant', JSON.stringify(sanitized))
     setToken(data.token)
-    setMerchant(data.merchant)
-    return data
+    setMerchant(sanitized)
+    return { ...data, merchant: sanitized }
   }, [])
 
   const register = useCallback(async (formData) => {
     const data = await registerMerchant(formData)
+    const sanitized = sanitizeMerchant(data.merchant)
     localStorage.setItem('mh_token', data.token)
-    localStorage.setItem('mh_merchant', JSON.stringify(data.merchant))
+    localStorage.setItem('mh_merchant', JSON.stringify(sanitized))
     setToken(data.token)
-    setMerchant(data.merchant)
-    return data
+    setMerchant(sanitized)
+    return { ...data, merchant: sanitized }
   }, [])
 
   const value = useMemo(() => ({
