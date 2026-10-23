@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: merchanthub_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: merchanthub
+      POSTGRES_USER: merchanthub
+      POSTGRES_PASSWORD: merchanthub
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

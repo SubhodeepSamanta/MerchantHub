@@ -1,0 +1,33 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: merchanthub
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:merchanthub}
+    username: ${DB_USER:merchanthub}
+    password: ${DB_PASSWORD:merchanthub}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: ${SHOW_SQL:true}
+    properties:
+      hibernate:
+        format_sql: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dGhpcy1pcy1hLXZlcnktc2VjdXJlLWFuZC1sb25nLXJhbmRvbS1zZWNyZXQta2V5LWZvci1tZXJjaGFudGh1Yi1qd3QtYXV0aGVudGljYXRpb24=}
+    expiration-ms: 86400000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
